@@ -14,3 +14,14 @@
 - 💰 Просмотр цен на услуги
 - 📍 Контакты и адрес зала
 - 🔐 Авторизация через Яндекс OAuth
+
+trainer-telegram-bot/
+├── main.py              # Точка входа
+├── config.py           # Конфигурация
+├── keyboards.py        # Клавиатуры
+├── states.py          # Состояния FSM
+├── yandex_calendar.py # Яндекс.Календарь API
+├── user_handlers.py   # Обработчики команд
+├── other_handlers.py  # Основные обработчики
+├── requirements.txt   # Зависимости
+└── README.md         # Документация
