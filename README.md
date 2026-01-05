@@ -4,7 +4,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
 ![aiogram](https://img.shields.io/badge/aiogram-3.x-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
+
 
 ## ✨ Возможности
 
