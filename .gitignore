@@ -40,7 +40,7 @@ ENV/
 Thumbs.db
 
 # Project specific
-.env
+*.env
 yandex_token.json
 *.db
 *.log

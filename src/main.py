@@ -1,12 +1,18 @@
 import asyncio
 from aiogram import Bot, Dispatcher
-from config import BOT_TOKEN, REDIRECT_URI, YANDEX_CLIENT_ID, YANDEX_CLIENT_SECRET
-from keysboards import *
+from src.config import BOT_TOKEN, REDIRECT_URI, YANDEX_CLIENT_ID, YANDEX_CLIENT_SECRET
+from src.keysboards import *
 from handlers import other_handlers
 from handlers import user_handlers
-from yandex_calendar import YandexCalendarAPI
-import sys
-import socket
+from src.yandex_calendar import YandexCalendarAPI
+
+
+async def handler(event: dict, context):
+    print(f"{event=}")
+    print(f"{context=}")
+
+    return {"statusCode": 200,
+            "body": ""}
 
 async def main() -> None:
     bot = Bot(token=BOT_TOKEN)
