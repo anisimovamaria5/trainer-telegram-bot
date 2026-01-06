@@ -1,7 +1,7 @@
 from aiogram import Router
 from aiogram.filters import Command
 from telebot import types
-from keysboards import get_main_menu, timetable
+from src.keysboards import get_main_menu, timetable
 
 router = Router()
 
