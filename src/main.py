@@ -8,10 +8,13 @@ from keysboards import *
 from handlers import other_handlers, user_handlers
 from yandex_calendar import YandexCalendarAPI
 
+from aiogram.types import Update
+
 
 storage = MemoryStorage()
 bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(storage=storage)
+dp = Dispatcher()
+
 
 yandex_calendar = YandexCalendarAPI(
     client_id=YANDEX_CLIENT_ID,
