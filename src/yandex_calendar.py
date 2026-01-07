@@ -1,11 +1,7 @@
 from ast import Dict
-from email import header
 import json
 import os
-import ssl
 from typing import List, Optional, Tuple
-import certifi
-import requests
 from datetime import datetime, time, timedelta
 from urllib.parse import urlencode
 import aiohttp
