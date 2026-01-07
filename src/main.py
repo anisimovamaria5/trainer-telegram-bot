@@ -6,13 +6,12 @@ from keysboards import *
 from handlers import other_handlers
 from handlers import user_handlers
 from yandex_calendar import YandexCalendarAPI
-<<<<<<< HEAD
+
 from aiogram.types import Update
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
-=======
->>>>>>> 553a473ac2e98d1c2c24dd9e8824b88e0342c35a
+
 
 
 async def handler(event: dict, context):
