@@ -1,45 +1,51 @@
 import asyncio
 import json
-from aiogram import Bot, Dispatcher
+import logging
+from aiogram import Bot, Dispatcher, types
+from aiogram.fsm.storage.memory import MemoryStorage
 from config import BOT_TOKEN, REDIRECT_URI, YANDEX_CLIENT_ID, YANDEX_CLIENT_SECRET
 from keysboards import *
-from handlers import other_handlers
-from handlers import user_handlers
+from handlers import other_handlers, user_handlers
 from yandex_calendar import YandexCalendarAPI
-<<<<<<< HEAD
-from aiogram.types import Update
 
+
+storage = MemoryStorage()
 bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher()
-=======
->>>>>>> 553a473ac2e98d1c2c24dd9e8824b88e0342c35a
+dp = Dispatcher(storage=storage)
 
+yandex_calendar = YandexCalendarAPI(
+    client_id=YANDEX_CLIENT_ID,
+    client_secret=YANDEX_CLIENT_SECRET,
+    redirect_uri=REDIRECT_URI
+)
+dp['yandex_calendar'] = yandex_calendar
 
+dp.include_router(user_handlers.router)
+dp.include_router(other_handlers.router)
+
+# Обработчик для вебхуков
 async def handler(event: dict, context):
-    body: str = event["body"]
-    update_data = json.loads(body) if body else {}
+    try:
 
-    await dp.feed_update(
-        bot, 
-        Update.model_validate(update_data)
-        )
+        body = event.get("body", "{}")
+        update_data = json.loads(body)
 
-    return {"statusCode": 200,
-            "body": ""}
+        update = types.Update(**update_data)
 
+        await dp.feed_update(bot=bot, update=update)
+        
+        return {
+            "statusCode": 200,
+            "body": json.dumps({"ok": True})
+        }
+    except Exception as e:
+        return {
+            "statusCode": 500,
+            "body": json.dumps({"error": str(e)})
+        }
 
 async def main() -> None:
-    yandex_calendar = YandexCalendarAPI(
-        client_id=YANDEX_CLIENT_ID,
-        client_secret=YANDEX_CLIENT_SECRET,
-        redirect_uri=REDIRECT_URI
-    )
-    dp['yandex_calendar'] = yandex_calendar
-
-    dp.include_router(user_handlers.router)
-    dp.include_router(other_handlers.router)
     await dp.start_polling(bot)
-
 
 if __name__ == '__main__':
     asyncio.run(main())
