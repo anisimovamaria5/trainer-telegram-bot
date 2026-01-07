@@ -5,13 +5,13 @@ from aiogram import Bot, Router, F
 from setuptools import Command
 from telebot import types
 from aiogram.types import CallbackQuery
-from src.keysboards import get_main_menu
+from keysboards import get_main_menu
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from src.states import AppointmentStates
-from src.yandex_calendar import YandexCalendarAPI
+from states import AppointmentStates
+from yandex_calendar import YandexCalendarAPI
 
 
 router = Router()
