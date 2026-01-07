@@ -1,10 +1,10 @@
 import asyncio
 from aiogram import Bot, Dispatcher
-from .config import BOT_TOKEN, REDIRECT_URI, YANDEX_CLIENT_ID, YANDEX_CLIENT_SECRET
-from .keysboards import *
+from config import BOT_TOKEN, REDIRECT_URI, YANDEX_CLIENT_ID, YANDEX_CLIENT_SECRET
+from keysboards import *
 from handlers import other_handlers
 from handlers import user_handlers
-from .yandex_calendar import YandexCalendarAPI
+from yandex_calendar import YandexCalendarAPI
 
 
 async def handler(event: dict, context):
