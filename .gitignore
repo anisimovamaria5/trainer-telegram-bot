@@ -26,3 +26,8 @@ token.json
 *.json
 google_token.pickle
 
+<<<<<<< HEAD
+=======
+# Telegram session files (если будут)
+*.session
+>>>>>>> f11be5c759b73d82ce9286cdd91864a4d88fad7f
