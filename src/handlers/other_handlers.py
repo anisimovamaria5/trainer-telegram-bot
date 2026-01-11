@@ -5,14 +5,12 @@ from aiogram import Bot, Router, F
 from setuptools import Command
 from telebot import types
 from aiogram.types import CallbackQuery
-from keysboards import get_main_menu
+from src.keysboards import get_main_menu
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-
-from states import AppointmentStates
-from yandex_calendar import YandexCalendarAPI
-
+from src.states import AppointmentStates
+from src.google_calendar import GoogleCalendarAPI 
 
 router = Router()
 
@@ -66,7 +64,7 @@ async def handle_schedule(message: Message, state: FSMContext):
 
 
 @router.callback_query(F.data.startswith("date_"), AppointmentStates.waiting_for_date)
-async def handle_date_selection(callback: CallbackQuery, state: FSMContext, yandex_calendar: YandexCalendarAPI):
+async def handle_date_selection(callback: CallbackQuery, state: FSMContext):
     """Получение свободных слотов на выбранную дату"""
     
     date_str = callback.data.split('_')[1]
@@ -74,7 +72,8 @@ async def handle_date_selection(callback: CallbackQuery, state: FSMContext, yand
     await state.update_data(selected_date=selected_date)
 
     try: 
-        slots = await yandex_calendar.get_available_slots(selected_date)
+        calendar = GoogleCalendarAPI()
+        slots = await calendar.get_available_slots(selected_date)
 
         if not slots:
             await callback.message.edit_text('"Нет свободных слотов на эту дату. Выберите другую дату')
@@ -106,7 +105,7 @@ async def handle_time_selection(callback: CallbackQuery, state:FSMContext):
     await state.set_state(AppointmentStates.waiting_for_name)
 
 @router.message(AppointmentStates.waiting_for_name)
-async def handle_name_input(message: Message, state: FSMContext, bot: Bot, yandex_calendar: YandexCalendarAPI):
+async def handle_name_input(message: Message, state: FSMContext):
     """Создание события в календаре и завершение записи"""
     
     user_data = await state.get_data()
@@ -130,58 +129,89 @@ async def handle_name_input(message: Message, state: FSMContext, bot: Bot, yande
         }
     }
 
-    created_event = await yandex_calendar.create_event(event)
-    await message.answer(
+    try:
+        calendar = GoogleCalendarAPI()
+        created_event = await calendar.create_event(event)
+        await message.answer(
             f"✅ Запись успешно создана!\n"
             f"📅 Дата: {selected_date.strftime('%d.%m.%Y')}\n"
             f"⏰ Время: {selected_time}\n"
             f"👤 Имя: {client_name}"
-    )
+        )
+    except Exception as e:
+        await message.answer(f"❌ Ошибка при создании записи: {str(e)}")
+    
     await state.clear()
 
 @router.message(F.text == "auth")
-async def simple_auth(message: Message, yandex_calendar: YandexCalendarAPI):
-    """Начало процесса авторизации через Яндекс OAuth"""
-
-    if yandex_calendar.token:
-        try:
-            today = datetime.now().date()
-            events = await yandex_calendar.get_busy_periods(today)
+async def simple_auth(message: Message):
+    """Авторизация в Google Calendar (автоматическая при первом запуске)"""
+    try:
+        # Создаем экземпляр - авторизация произойдет автоматически
+        calendar = GoogleCalendarAPI()
+        
+        if calendar.token:
             await message.answer(
-                f"✅ Токен уже активен!\n"
-                f"Событий сегодня: {len(events)}\n"
-                f"Можешь использовать 'Расписание'"
+                "✅ Авторизация в Google Calendar успешна!\n\n"
+                "Теперь можете использовать команду 'Расписание'."
             )
-            return
-        except:
-            pass
-    
-    auth_url = await yandex_calendar.get_auth_url()
-    
-    await message.answer(
-        "🔐 Для авторизации:\n\n"
-        "1. Перейди по ссылке:\n"
-        f"<code>{auth_url}</code>\n\n"
-        "2. Разреши доступ к календарю\n"
-        "3. Скопируй код из адресной строки\n"
-        "4. Отправь его мне\n\n"
-    )
+        else:
+            await message.answer(
+                "⚠️ Авторизация не удалась. Убедитесь, что файл credentials.json "
+                "находится в корневой папке проекта."
+            )
+    except Exception as e:
+        await message.answer(f"❌ Ошибка авторизации: {str(e)}")
 
 @router.message(F.text.regexp(r'^[a-zA-Z0-9]{15,50}$'))
-async def handle_short_code(message: Message, yandex_calendar: YandexCalendarAPI):
-    """Обмен кода авторизации на токен доступа"""
-    
+async def handle_short_code(message: Message):
+    """Обработка кодов (оставлено для совместимости)"""
     code = message.text.strip()
     
     if code.lower() in ["расписание", "цены", "контакты", "адрес", "назад в меню", "auth"]:
         return
     
-    await message.answer("🔄 Получаю токен...")
+    await message.answer(
+        "ℹ️ Для Google Calendar авторизация происходит автоматически "
+        "при первом запуске через браузер."
+    )
+
+@router.message(F.text == "debug_calendar")
+async def debug_calendar(message: Message):
+    """Полная отладка календаря"""
+    try:
+        await message.answer("🔍 Начинаю диагностику Google Calendar...")
+        
+        calendar = GoogleCalendarAPI()
     
-    success = await yandex_calendar.get_token(code)
-    if success:
-        await message.answer(
-            "✅ Токен получен и сохранен!\n\n"
-        )
-    else:
-        await message.answer("❌ Не удалось получить токен. Попробуй еще раз.")
+        if not calendar.token:
+            await message.answer("❌ Нет токена авторизации")
+            return
+            
+        await message.answer(f"✅ Токен получен")
+        
+        today = datetime.now().date()
+        await message.answer(f"📅 Получаю события на {today.strftime('%d.%m.%Y')}...")
+        
+        events = await calendar.get_busy_periods(datetime.now())
+        await message.answer(f"✅ Событий найдено: {len(events)}")
+        
+        if events:
+            first_event = events[0]
+            summary = first_event.get('summary', 'Без названия')
+            start_time = first_event.get('start', {}).get('dateTime', 'Нет времени')
+            await message.answer(f"📝 Пример события:\nНазвание: {summary}\nВремя: {start_time}")
+        
+        await message.answer("🔄 Получаю свободные слоты...")
+        slots = await calendar.get_available_slots(today)
+        await message.answer(f"✅ Свободных слотов найдено: {len(slots)}")
+        
+        if slots:
+            for start, end in slots[:5]:
+                await message.answer(f"• {start.strftime('%H:%M')} - {end.strftime('%H:%M')}")
+                
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        await message.answer(f"❌ Ошибка диагностики:\n{str(e)}")
+        print(f"FULL ERROR:\n{error_trace}")

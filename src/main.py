@@ -3,11 +3,10 @@ import json
 import logging
 from aiogram import Bot, Dispatcher, types
 from aiogram.fsm.storage.memory import MemoryStorage
-from config import BOT_TOKEN, REDIRECT_URI, YANDEX_CLIENT_ID, YANDEX_CLIENT_SECRET
-from keysboards import *
-from handlers import other_handlers, user_handlers
-from yandex_calendar import YandexCalendarAPI
-
+from src.config import BOT_TOKEN
+from src.keysboards import *
+from src.handlers import other_handlers, user_handlers
+from src.google_calendar import GoogleCalendarAPI
 from aiogram.types import Update
 
 
@@ -16,25 +15,19 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 
-yandex_calendar = YandexCalendarAPI(
-    client_id=YANDEX_CLIENT_ID,
-    client_secret=YANDEX_CLIENT_SECRET,
-    redirect_uri=REDIRECT_URI
-)
-dp['yandex_calendar'] = yandex_calendar
+google_calendar = GoogleCalendarAPI()
+dp['google_calendar'] = google_calendar 
 
 dp.include_router(user_handlers.router)
 dp.include_router(other_handlers.router)
 
-# Обработчик для вебхуков
+
 async def handler(event: dict, context):
     try:
 
         body = event.get("body", "{}")
         update_data = json.loads(body)
-
         update = types.Update(**update_data)
-
         await dp.feed_update(bot=bot, update=update)
         
         return {
